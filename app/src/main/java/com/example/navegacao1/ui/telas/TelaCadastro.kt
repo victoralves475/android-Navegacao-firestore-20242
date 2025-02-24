@@ -20,22 +20,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.navegacao1.model.dados.Usuario
 import com.example.navegacao1.model.dados.UsuarioDAO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-val usuarioDAO: UsuarioDAO = UsuarioDAO()
-
 @Composable
-fun TelaLogin(
+fun TelaCadastro(
     modifier: Modifier = Modifier,
-    onSigninClick: () -> Unit,
-    onSignupClick: () -> Unit
+    onCadastroSuccess: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var login by remember { mutableStateOf("") }
+    var nome by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var mensagemErro by remember { mutableStateOf<String?>(null) }
 
@@ -44,9 +42,9 @@ fun TelaLogin(
         modifier = modifier.fillMaxWidth()
     ) {
         OutlinedTextField(
-            value = login,
-            onValueChange = { login = it },
-            label = { Text("Login") }
+            value = nome,
+            onValueChange = { nome = it },
+            label = { Text("Nome") }
         )
         Spacer(modifier = Modifier.height(10.dp))
         OutlinedTextField(
@@ -59,23 +57,17 @@ fun TelaLogin(
         Button(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                scope.launch(Dispatchers.IO) {
-                    usuarioDAO.buscarPorNome(login) { usuario ->
-                        if (usuario != null && usuario.senha == senha) {
-                            onSigninClick()
-                        } else {
-                            mensagemErro = "Login ou senha inválidos!"
+                if (nome.isNotBlank() && senha.isNotBlank()) {
+                    scope.launch(Dispatchers.IO) {
+                        UsuarioDAO().adicionar(Usuario(nome = nome, senha = senha)) {
+                            // Após cadastro com sucesso, navega de volta para a tela de login
+                            onCadastroSuccess()
                         }
                     }
+                } else {
+                    mensagemErro = "Preencha todos os campos!"
                 }
             }
-        ) {
-            Text("Entrar")
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = { onSignupClick() }
         ) {
             Text("Cadastrar")
         }
